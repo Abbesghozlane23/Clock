@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Clock with Game Lights</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        .clock {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .time {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+        }
+        .date {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-top: 0.5rem;
+        }
+        .label {
+            font-size: 1.5rem;
+            color: #00ff00;
+            margin-bottom: 0.5rem;
+        }
+        .light {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #00ff00;
+            box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00, 0 0 40px #00ff00;
+            animation: float 5s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(0) translateX(20px); }
+            75% { transform: translateY(20px) translateX(10px); }
+        }
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clock">
+            <div class="label">Your Time</div>
+            <div class="time" id="localTime"></div>
+            <div class="date" id="localDate"></div>
+        </div>
+        <div class="clock">
+            <div class="label">Türkiye Time</div>
+            <div class="time" id="turkeyTime"></div>
+            <div class="date" id="turkeyDate"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateClocks() {
+            const now = new Date();
+            const turkeyTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Istanbul"}));
+
+            document.getElementById('localTime').textContent = now.toLocaleTimeString();
+            document.getElementById('localDate').textContent = now.toLocaleDateString();
+
+            document.getElementById('turkeyTime').textContent = turkeyTime.toLocaleTimeString();
+            document.getElementById('turkeyDate').textContent = turkeyTime.toLocaleDateString();
+        }
+
+        function createLight() {
+            const light = document.createElement('div');
+            light.className = 'light';
+            light.style.left = `${Math.random() * 100}vw`;
+            light.style.top = `${Math.random() * 100}vh`;
+            light.style.animationDuration = `${5 + Math.random() * 10}s`;
+            document.body.appendChild(light);
+        }
+
+        // Update clocks every second
+        setInterval(updateClocks, 1000);
+
+        // Initial call to display the time immediately
+        updateClocks();
+
+        // Create floating lights
+        for (let i = 0; i < 20; i++) {
+            createLight();
+        }
+    </script>
+</body>
+</html>

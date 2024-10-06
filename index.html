@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prayer Times</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Assume you have a CSS file -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
+<body class="bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center min-h-screen p-4">
     <h1 class="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         <div class="card w-full">
@@ -27,9 +27,9 @@
         </div>
     </div>
     <div class="mt-8 text-white text-center">
-        <h2 class="text-2xl font-semibold mb-2">Next Prayer</h2>
-        <p class="text-xl" id="next-prayer"></p>
-        <p class="text-lg" id="next-countdown"></p>
+        <h2 class="text-2xl font-semibold mb-2" id="next-prayer-name"></h2>
+        <p class="text-xl" id="next-prayer-time"></p>
+        <p class="text-lg" id="time-remaining"></p>
     </div>
 
     <script>
@@ -50,65 +50,72 @@
             }
         };
 
-        function updateTime() {
+        function updateClock() {
             const now = new Date();
+            const khenchelaTime = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Algiers', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const ankaraTime = now.toLocaleTimeString('en-US', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const khenchelaDate = now.toLocaleDateString('en-US', { timeZone: 'Africa/Algiers', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+            const ankaraDate = now.toLocaleDateString('en-US', { timeZone: 'Europe/Istanbul', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+            document.getElementById('khenchela-time').innerText = khenchelaTime;
+            document.getElementById('ankara-time').innerText = ankaraTime;
+            document.getElementById('khenchela-date').innerText = khenchelaDate;
+            document.getElementById('ankara-date').innerText = ankaraDate;
+
+            updateNextPrayer(now);
+        }
+
+        function updateNextPrayer(now) {
             const currentTime = now.getHours() * 60 + now.getMinutes();
-            let nextPrayer = { name: '', time: '', countdown: '' };
+            let nextPrayerName = '';
+            let nextPrayerTime = Infinity;
             let location = 'khenchela';
 
             if (now.getHours() >= 21) {
                 location = 'ankara';
             }
 
-            let nextPrayerTime = Infinity;
-
             for (const [prayer, time] of Object.entries(prayerTimes[location])) {
                 const [hours, minutes] = time.split(':').map(Number);
                 const prayerMinutes = hours * 60 + minutes;
                 if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
-                    nextPrayer.name = prayer;
+                    nextPrayerName = prayer;
                     nextPrayerTime = prayerMinutes;
-                    nextPrayer.time = time;
                 }
             }
 
-            if (!nextPrayer.name) {
-                nextPrayer.name = 'fajr';
-                nextPrayer.time = prayerTimes[location].fajr;
+            if (nextPrayerName === '') {
+                nextPrayerName = 'fajr';
+                nextPrayerTime = 24 * 60 + prayerTimes[location].fajr.split(':').map(Number).reduce((acc, time) => acc * 60 + time);
             }
 
             const timeDiff = nextPrayerTime - currentTime;
             const hours = Math.floor(timeDiff / 60);
             const minutes = timeDiff % 60;
-            nextPrayer.countdown = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-            document.getElementById('next-prayer').innerText = nextPrayer.name.charAt(0).toUpperCase() + nextPrayer.name.slice(1) + ' at ' + nextPrayer.time;
-            document.getElementById('next-countdown').innerText = 'Time remaining: ' + nextPrayer.countdown;
+            document.getElementById('next-prayer-name').innerText = nextPrayerName.charAt(0).toUpperCase() + nextPrayerName.slice(1);
+            document.getElementById('next-prayer-time').innerText = prayerTimes[location][nextPrayerName];
+            document.getElementById('time-remaining').innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         }
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('khenchela-time').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Algiers', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            document.getElementById('ankara-time').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            document.getElementById('khenchela-date').innerText = now.toLocaleDateString('en-US', { timeZone: 'Africa/Algiers', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-            document.getElementById('ankara-date').innerText = now.toLocaleDateString('en-US', { timeZone: 'Europe/Istanbul', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        function populatePrayerTimes() {
+            for (const [prayer, time] of Object.entries(prayerTimes.khenchela)) {
+                const div = document.createElement('div');
+                div.className = 'badge text-sm';
+                div.innerText = `${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}`;
+                document.getElementById('khenchela-prayer-times').appendChild(div);
+            }
 
-            updatePrayerTimes();
+            for (const [prayer, time] of Object.entries(prayerTimes.ankara)) {
+                const div = document.createElement('div');
+                div.className = 'badge text-sm';
+                div.innerText = `${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}`;
+                document.getElementById('ankara-prayer-times').appendChild(div);
+            }
         }
 
-        function updatePrayerTimes() {
-            const khenchelaPrayerTimes = prayerTimes.khenchela;
-            const ankaraPrayerTimes = prayerTimes.ankara;
-
-            document.getElementById('khenchela-prayer-times').innerHTML = Object.entries(khenchelaPrayerTimes).map(([prayer, time]) => `<span class="badge">${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}</span>`).join('');
-            document.getElementById('ankara-prayer-times').innerHTML = Object.entries(ankaraPrayerTimes).map(([prayer, time]) => `<span class="badge">${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}</span>`).join('');
-
-            updateTime();
-        }
-
-        setInterval(() => {
-            updateClock();
-        }, 1000);
+        setInterval(updateClock, 1000);
+        populatePrayerTimes();
     </script>
 </body>
 </html>

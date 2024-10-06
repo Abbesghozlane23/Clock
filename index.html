@@ -1,309 +1,114 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-
-const prayerTimes = {
-  khenchela: {
-    fajr: '03:39',
-    dhuhr: '12:36',
-    asr: '16:25',
-    maghrib: '19:54',
-    isha: '21:31'
-  },
-  ankara: {
-    fajr: '03:25',
-    dhuhr: '12:59',
-    asr: '16:56',
-    maghrib: '20:29',
-    isha: '22:16'
-  }
-}
-
-export default function Component() {
-  const [time, setTime] = useState(new Date())
-  const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', countdown: '' })
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date())
-      updateNextPrayer()
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  const formatTime = (date: Date, timezone: string) => {
-    return date.toLocaleTimeString('en-US', { 
-      timeZone: timezone, 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit', 
-      hour12: false 
-    })
-  }
-
-  const formatDate = (date: Date, timezone: string) => {
-    return date.toLocaleDateString('en-US', { 
-      timeZone: timezone, 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
-
-  const updateNextPrayer = () => {
-    const now = new Date()
-    const currentTime = now.getHours() * 60 + now.getMinutes()
-    
-    let nextPrayerName = ''
-    let nextPrayerTime = Infinity
-    let location = 'khenchela'
-
-    if (now.getHours() >= 22) {
-      location = 'ankara'
-    }
-
-    for (const [prayer, time] of Object.entries(prayerTimes[location])) {
-      const [hours, minutes] = time.split(':').map(Number)
-      const prayerMinutes = hours * 60 + minutes
-      if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
-        nextPrayerName = prayer
-        nextPrayerTime = prayerMinutes
-      }
-    }
-
-    if (nextPrayerName === '') {
-      nextPrayerName = 'fajr'
-      nextPrayerTime = 24 * 60 + prayerTimes[location].fajr.split(':').map(Number).reduce((acc, time) => acc * 60 + time)
-    }
-
-    const timeDiff = nextPrayerTime - currentTime
-    const hours = Math.floor(timeDiff / 60)
-    const minutes = timeDiff % 60
-
-    setNextPrayer({
-      name: nextPrayerName,
-      time: prayerTimes[location][nextPrayerName],
-      countdown: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-    })
-  }
-
-  const prayerNameInArabic = {
-    fajr: 'الفجر',
-    dhuhr: 'الظهر',
-    asr: 'العصر',
-    maghrib: 'المغرب',
-    isha: 'العشاء'
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        <ClockCard
-          city="Khenchela, Algeria"
-          time={formatTime(time, 'Africa/Algiers')}
-          date={formatDate(time, 'Africa/Algiers')}
-          prayerTimes={prayerTimes.khenchela}
-        />
-        <ClockCard
-          city="Ankara, Turkey"
-          time={formatTime(time, 'Europe/Istanbul')}
-          date={formatDate(time, 'Europe/Istanbul')}
-          prayerTimes={prayerTimes.ankara}
-        />
-      </div>
-      <div className="mt-8 text-white text-center">
-        <h2 className="text-2xl font-semibold mb-2">الصلاة القادمة</h2>
-        <p className="text-xl">
-          {prayerNameInArabic[nextPrayer.name]} في {nextPrayer.time}
-        </p>
-        <p className="text-lg">الوقت المتبقي: {nextPrayer.countdown}</p>
-      </div>
-    </div>
-  )
-}
-
-function ClockCard({ city, time, date, prayerTimes }) {
-  const prayerNameInArabic = {
-    fajr: 'الفجر',
-    dhuhr: 'الظهر',
-    asr: 'العصر',
-    maghrib: 'المغرب',
-    isha: 'العشاء'
-  }
-
-  return (
-    <Card className="w-full">
-      <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4">{city}</h2>
-        <div className="text-4xl font-bold mb-2">{time}</div>
-        <div className="text-gray-600 mb-4">{date}</div>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(prayerTimes).map(([prayer, time]) => (
-            <Badge key={prayer} variant="outline" className="text-sm">
-              {prayerNameInArabic[prayer]}: {time}
-            </Badge>
-          ))}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prayer Times</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Assume you have a CSS file -->
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
+    <h1 class="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <div class="card w-full">
+            <div class="card-content p-6">
+                <h2 class="text-2xl font-bold mb-4">Khenchela, Algeria</h2>
+                <div class="text-4xl font-bold mb-2" id="khenchela-time"></div>
+                <div class="text-gray-600 mb-4" id="khenchela-date"></div>
+                <div class="grid grid-cols-2 gap-2" id="khenchela-prayer-times"></div>
+            </div>
         </div>
-      </CardContent>
-    </Card>
-  )
-}'use client'
-
-import { useState, useEffect } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-
-const prayerTimes = {
-  khenchela: {
-    fajr: '03:39',
-    dhuhr: '12:36',
-    asr: '16:25',
-    maghrib: '19:54',
-    isha: '21:31'
-  },
-  ankara: {
-    fajr: '03:25',
-    dhuhr: '12:59',
-    asr: '16:56',
-    maghrib: '20:29',
-    isha: '22:16'
-  }
-}
-
-export default function Component() {
-  const [time, setTime] = useState(new Date())
-  const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', countdown: '' })
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date())
-      updateNextPrayer()
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  const formatTime = (date: Date, timezone: string) => {
-    return date.toLocaleTimeString('en-US', { 
-      timeZone: timezone, 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit', 
-      hour12: false 
-    })
-  }
-
-  const formatDate = (date: Date, timezone: string) => {
-    return date.toLocaleDateString('en-US', { 
-      timeZone: timezone, 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
-
-  const updateNextPrayer = () => {
-    const now = new Date()
-    const currentTime = now.getHours() * 60 + now.getMinutes()
-    
-    let nextPrayerName = ''
-    let nextPrayerTime = Infinity
-    let location = 'khenchela'
-
-    if (now.getHours() >= 22) {
-      location = 'ankara'
-    }
-
-    for (const [prayer, time] of Object.entries(prayerTimes[location])) {
-      const [hours, minutes] = time.split(':').map(Number)
-      const prayerMinutes = hours * 60 + minutes
-      if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
-        nextPrayerName = prayer
-        nextPrayerTime = prayerMinutes
-      }
-    }
-
-    if (nextPrayerName === '') {
-      nextPrayerName = 'fajr'
-      nextPrayerTime = 24 * 60 + prayerTimes[location].fajr.split(':').map(Number).reduce((acc, time) => acc * 60 + time)
-    }
-
-    const timeDiff = nextPrayerTime - currentTime
-    const hours = Math.floor(timeDiff / 60)
-    const minutes = timeDiff % 60
-
-    setNextPrayer({
-      name: nextPrayerName,
-      time: prayerTimes[location][nextPrayerName],
-      countdown: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-    })
-  }
-
-  const prayerNameInArabic = {
-    fajr: 'الفجر',
-    dhuhr: 'الظهر',
-    asr: 'العصر',
-    maghrib: 'المغرب',
-    isha: 'العشاء'
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        <ClockCard
-          city="Khenchela, Algeria"
-          time={formatTime(time, 'Africa/Algiers')}
-          date={formatDate(time, 'Africa/Algiers')}
-          prayerTimes={prayerTimes.khenchela}
-        />
-        <ClockCard
-          city="Ankara, Turkey"
-          time={formatTime(time, 'Europe/Istanbul')}
-          date={formatDate(time, 'Europe/Istanbul')}
-          prayerTimes={prayerTimes.ankara}
-        />
-      </div>
-      <div className="mt-8 text-white text-center">
-        <h2 className="text-2xl font-semibold mb-2">الصلاة القادمة</h2>
-        <p className="text-xl">
-          {prayerNameInArabic[nextPrayer.name]} في {nextPrayer.time}
-        </p>
-        <p className="text-lg">الوقت المتبقي: {nextPrayer.countdown}</p>
-      </div>
-    </div>
-  )
-}
-
-function ClockCard({ city, time, date, prayerTimes }) {
-  const prayerNameInArabic = {
-    fajr: 'الفجر',
-    dhuhr: 'الظهر',
-    asr: 'العصر',
-    maghrib: 'المغرب',
-    isha: 'العشاء'
-  }
-
-  return (
-    <Card className="w-full">
-      <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4">{city}</h2>
-        <div className="text-4xl font-bold mb-2">{time}</div>
-        <div className="text-gray-600 mb-4">{date}</div>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(prayerTimes).map(([prayer, time]) => (
-            <Badge key={prayer} variant="outline" className="text-sm">
-              {prayerNameInArabic[prayer]}: {time}
-            </Badge>
-          ))}
+        <div class="card w-full">
+            <div class="card-content p-6">
+                <h2 class="text-2xl font-bold mb-4">Ankara, Turkey</h2>
+                <div class="text-4xl font-bold mb-2" id="ankara-time"></div>
+                <div class="text-gray-600 mb-4" id="ankara-date"></div>
+                <div class="grid grid-cols-2 gap-2" id="ankara-prayer-times"></div>
+            </div>
         </div>
-      </CardContent>
-    </Card>
-  )
-}
+    </div>
+    <div class="mt-8 text-white text-center">
+        <h2 class="text-2xl font-semibold mb-2">Next Prayer</h2>
+        <p class="text-xl" id="next-prayer"></p>
+        <p class="text-lg" id="next-countdown"></p>
+    </div>
+
+    <script>
+        const prayerTimes = {
+            khenchela: {
+                fajr: '05:30',
+                dhuhr: '12:45',
+                asr: '16:15',
+                maghrib: '19:30',
+                isha: '21:00'
+            },
+            ankara: {
+                fajr: '04:45',
+                dhuhr: '12:30',
+                asr: '16:00',
+                maghrib: '19:15',
+                isha: '20:45'
+            }
+        };
+
+        function updateTime() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            let nextPrayer = { name: '', time: '', countdown: '' };
+            let location = 'khenchela';
+
+            if (now.getHours() >= 21) {
+                location = 'ankara';
+            }
+
+            let nextPrayerTime = Infinity;
+
+            for (const [prayer, time] of Object.entries(prayerTimes[location])) {
+                const [hours, minutes] = time.split(':').map(Number);
+                const prayerMinutes = hours * 60 + minutes;
+                if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
+                    nextPrayer.name = prayer;
+                    nextPrayerTime = prayerMinutes;
+                    nextPrayer.time = time;
+                }
+            }
+
+            if (!nextPrayer.name) {
+                nextPrayer.name = 'fajr';
+                nextPrayer.time = prayerTimes[location].fajr;
+            }
+
+            const timeDiff = nextPrayerTime - currentTime;
+            const hours = Math.floor(timeDiff / 60);
+            const minutes = timeDiff % 60;
+            nextPrayer.countdown = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+            document.getElementById('next-prayer').innerText = nextPrayer.name.charAt(0).toUpperCase() + nextPrayer.name.slice(1) + ' at ' + nextPrayer.time;
+            document.getElementById('next-countdown').innerText = 'Time remaining: ' + nextPrayer.countdown;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('khenchela-time').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Algiers', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            document.getElementById('ankara-time').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            document.getElementById('khenchela-date').innerText = now.toLocaleDateString('en-US', { timeZone: 'Africa/Algiers', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('ankara-date').innerText = now.toLocaleDateString('en-US', { timeZone: 'Europe/Istanbul', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+            updatePrayerTimes();
+        }
+
+        function updatePrayerTimes() {
+            const khenchelaPrayerTimes = prayerTimes.khenchela;
+            const ankaraPrayerTimes = prayerTimes.ankara;
+
+            document.getElementById('khenchela-prayer-times').innerHTML = Object.entries(khenchelaPrayerTimes).map(([prayer, time]) => `<span class="badge">${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}</span>`).join('');
+            document.getElementById('ankara-prayer-times').innerHTML = Object.entries(ankaraPrayerTimes).map(([prayer, time]) => `<span class="badge">${prayer.charAt(0).toUpperCase() + prayer.slice(1)}: ${time}</span>`).join('');
+
+            updateTime();
+        }
+
+        setInterval(() => {
+            updateClock();
+        }, 1000);
+    </script>
+</body>
+</html>

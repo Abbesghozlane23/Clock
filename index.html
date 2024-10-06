@@ -1,171 +1,309 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algeria and Turkey Digital Clocks</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #3498db, #8e44ad);
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        .welcome-message {
-            font-size: 2rem;
-            color: #ffffff;
-            text-align: center;
-            margin-bottom: 2rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        .clock-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            max-width: 800px;
-        }
-        .clock {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background-color: rgba(44, 62, 80, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-        .clock-face {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background-color: rgba(52, 73, 94, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .time {
-            font-size: 2rem;
-            color: #ecf0f1;
-            margin-bottom: 5px;
-        }
-        .date {
-            font-size: 0.9rem;
-            color: #bdc3c7;
-        }
-        .city {
-            position: absolute;
-            top: -30px;
-            font-size: 1.2rem;
-            color: #ecf0f1;
-            text-align: center;
-            width: 100%;
-        }
-        .bubble {
-            position: absolute;
-            border-radius: 50%;
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.2);
-            animation: float 15s linear infinite;
-        }
-        @keyframes float {
-            0% {
-                transform: translate(0, 100vh) scale(0);
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                transform: translate(0, -100vh) scale(1);
-                opacity: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="welcome-message">Welcome to my first site</div>
-    <div class="clock-container">
-        <div class="clock" id="algeria-clock">
-            <div class="city">Algeria</div>
-            <div class="clock-face">
-                <div class="time" id="algeria-time"></div>
-                <div class="date" id="algeria-date"></div>
-            </div>
-        </div>
-        <div class="clock" id="turkey-clock">
-            <div class="city">Turkey</div>
-            <div class="clock-face">
-                <div class="time" id="turkey-time"></div>
-                <div class="date" id="turkey-date"></div>
-            </div>
-        </div>
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+
+const prayerTimes = {
+  khenchela: {
+    fajr: '03:39',
+    dhuhr: '12:36',
+    asr: '16:25',
+    maghrib: '19:54',
+    isha: '21:31'
+  },
+  ankara: {
+    fajr: '03:25',
+    dhuhr: '12:59',
+    asr: '16:56',
+    maghrib: '20:29',
+    isha: '22:16'
+  }
+}
+
+export default function Component() {
+  const [time, setTime] = useState(new Date())
+  const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', countdown: '' })
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date())
+      updateNextPrayer()
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatTime = (date: Date, timezone: string) => {
+    return date.toLocaleTimeString('en-US', { 
+      timeZone: timezone, 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit', 
+      hour12: false 
+    })
+  }
+
+  const formatDate = (date: Date, timezone: string) => {
+    return date.toLocaleDateString('en-US', { 
+      timeZone: timezone, 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    })
+  }
+
+  const updateNextPrayer = () => {
+    const now = new Date()
+    const currentTime = now.getHours() * 60 + now.getMinutes()
+    
+    let nextPrayerName = ''
+    let nextPrayerTime = Infinity
+    let location = 'khenchela'
+
+    if (now.getHours() >= 22) {
+      location = 'ankara'
+    }
+
+    for (const [prayer, time] of Object.entries(prayerTimes[location])) {
+      const [hours, minutes] = time.split(':').map(Number)
+      const prayerMinutes = hours * 60 + minutes
+      if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
+        nextPrayerName = prayer
+        nextPrayerTime = prayerMinutes
+      }
+    }
+
+    if (nextPrayerName === '') {
+      nextPrayerName = 'fajr'
+      nextPrayerTime = 24 * 60 + prayerTimes[location].fajr.split(':').map(Number).reduce((acc, time) => acc * 60 + time)
+    }
+
+    const timeDiff = nextPrayerTime - currentTime
+    const hours = Math.floor(timeDiff / 60)
+    const minutes = timeDiff % 60
+
+    setNextPrayer({
+      name: nextPrayerName,
+      time: prayerTimes[location][nextPrayerName],
+      countdown: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    })
+  }
+
+  const prayerNameInArabic = {
+    fajr: 'الفجر',
+    dhuhr: 'الظهر',
+    asr: 'العصر',
+    maghrib: 'المغرب',
+    isha: 'العشاء'
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <ClockCard
+          city="Khenchela, Algeria"
+          time={formatTime(time, 'Africa/Algiers')}
+          date={formatDate(time, 'Africa/Algiers')}
+          prayerTimes={prayerTimes.khenchela}
+        />
+        <ClockCard
+          city="Ankara, Turkey"
+          time={formatTime(time, 'Europe/Istanbul')}
+          date={formatDate(time, 'Europe/Istanbul')}
+          prayerTimes={prayerTimes.ankara}
+        />
+      </div>
+      <div className="mt-8 text-white text-center">
+        <h2 className="text-2xl font-semibold mb-2">الصلاة القادمة</h2>
+        <p className="text-xl">
+          {prayerNameInArabic[nextPrayer.name]} في {nextPrayer.time}
+        </p>
+        <p className="text-lg">الوقت المتبقي: {nextPrayer.countdown}</p>
+      </div>
     </div>
-    <script>
-        function updateClocks() {
-            const now = new Date();
-            updateClock(now, 'Africa/Algiers', 'algeria');
-            updateClock(now, 'Europe/Istanbul', 'turkey');
-        }
+  )
+}
 
-        function updateClock(now, timezone, elementId) {
-            const options = {
-                timeZone: timezone,
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                hour12: false
-            };
-            const timeString = now.toLocaleTimeString('en-US', options);
-            
-            const dateOptions = {
-                timeZone: timezone,
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            };
-            const dateString = now.toLocaleDateString('en-US', dateOptions);
-            
-            document.getElementById(`${elementId}-time`).textContent = timeString;
-            document.getElementById(`${elementId}-date`).textContent = dateString;
-        }
+function ClockCard({ city, time, date, prayerTimes }) {
+  const prayerNameInArabic = {
+    fajr: 'الفجر',
+    dhuhr: 'الظهر',
+    asr: 'العصر',
+    maghrib: 'المغرب',
+    isha: 'العشاء'
+  }
 
-        function createBubbles() {
-            const container = document.body;
+  return (
+    <Card className="w-full">
+      <CardContent className="p-6">
+        <h2 className="text-2xl font-bold mb-4">{city}</h2>
+        <div className="text-4xl font-bold mb-2">{time}</div>
+        <div className="text-gray-600 mb-4">{date}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {Object.entries(prayerTimes).map(([prayer, time]) => (
+            <Badge key={prayer} variant="outline" className="text-sm">
+              {prayerNameInArabic[prayer]}: {time}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}'use client'
 
-            for (let i = 0; i < 20; i++) {
-                const bubble = document.createElement('div');
-                bubble.classList.add('bubble');
-                const size = Math.random() * 50 + 10;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${Math.random() * 100}vw`;
-                bubble.style.animationDuration = `${15 + Math.random() * 15}s`;
-                bubble.style.animationDelay = `${Math.random() * 5}s`;
-                
-                // Generate random color
-                const hue = Math.floor(Math.random() * 360);
-                const saturation = Math.floor(Math.random() * 50) + 50; // 50-100%
-                const lightness = Math.floor(Math.random() * 30) + 60; // 60-90%
-                const color = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.6)`;
-                
-                bubble.style.background = `radial-gradient(circle at 30% 30%, ${color}, rgba(255, 255, 255, 0.1))`;
-                
-                container.appendChild(bubble);
-            }
-        }
+import { useState, useEffect } from 'react'
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
-        updateClocks();
-        setInterval(updateClocks, 1000);
-        createBubbles();
-    </script>
-</body>
-</html>
+const prayerTimes = {
+  khenchela: {
+    fajr: '03:39',
+    dhuhr: '12:36',
+    asr: '16:25',
+    maghrib: '19:54',
+    isha: '21:31'
+  },
+  ankara: {
+    fajr: '03:25',
+    dhuhr: '12:59',
+    asr: '16:56',
+    maghrib: '20:29',
+    isha: '22:16'
+  }
+}
+
+export default function Component() {
+  const [time, setTime] = useState(new Date())
+  const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', countdown: '' })
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date())
+      updateNextPrayer()
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatTime = (date: Date, timezone: string) => {
+    return date.toLocaleTimeString('en-US', { 
+      timeZone: timezone, 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit', 
+      hour12: false 
+    })
+  }
+
+  const formatDate = (date: Date, timezone: string) => {
+    return date.toLocaleDateString('en-US', { 
+      timeZone: timezone, 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    })
+  }
+
+  const updateNextPrayer = () => {
+    const now = new Date()
+    const currentTime = now.getHours() * 60 + now.getMinutes()
+    
+    let nextPrayerName = ''
+    let nextPrayerTime = Infinity
+    let location = 'khenchela'
+
+    if (now.getHours() >= 22) {
+      location = 'ankara'
+    }
+
+    for (const [prayer, time] of Object.entries(prayerTimes[location])) {
+      const [hours, minutes] = time.split(':').map(Number)
+      const prayerMinutes = hours * 60 + minutes
+      if (prayerMinutes > currentTime && prayerMinutes < nextPrayerTime) {
+        nextPrayerName = prayer
+        nextPrayerTime = prayerMinutes
+      }
+    }
+
+    if (nextPrayerName === '') {
+      nextPrayerName = 'fajr'
+      nextPrayerTime = 24 * 60 + prayerTimes[location].fajr.split(':').map(Number).reduce((acc, time) => acc * 60 + time)
+    }
+
+    const timeDiff = nextPrayerTime - currentTime
+    const hours = Math.floor(timeDiff / 60)
+    const minutes = timeDiff % 60
+
+    setNextPrayer({
+      name: nextPrayerName,
+      time: prayerTimes[location][nextPrayerName],
+      countdown: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    })
+  }
+
+  const prayerNameInArabic = {
+    fajr: 'الفجر',
+    dhuhr: 'الظهر',
+    asr: 'العصر',
+    maghrib: 'المغرب',
+    isha: 'العشاء'
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold text-white mb-8">Welcome to my first site</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <ClockCard
+          city="Khenchela, Algeria"
+          time={formatTime(time, 'Africa/Algiers')}
+          date={formatDate(time, 'Africa/Algiers')}
+          prayerTimes={prayerTimes.khenchela}
+        />
+        <ClockCard
+          city="Ankara, Turkey"
+          time={formatTime(time, 'Europe/Istanbul')}
+          date={formatDate(time, 'Europe/Istanbul')}
+          prayerTimes={prayerTimes.ankara}
+        />
+      </div>
+      <div className="mt-8 text-white text-center">
+        <h2 className="text-2xl font-semibold mb-2">الصلاة القادمة</h2>
+        <p className="text-xl">
+          {prayerNameInArabic[nextPrayer.name]} في {nextPrayer.time}
+        </p>
+        <p className="text-lg">الوقت المتبقي: {nextPrayer.countdown}</p>
+      </div>
+    </div>
+  )
+}
+
+function ClockCard({ city, time, date, prayerTimes }) {
+  const prayerNameInArabic = {
+    fajr: 'الفجر',
+    dhuhr: 'الظهر',
+    asr: 'العصر',
+    maghrib: 'المغرب',
+    isha: 'العشاء'
+  }
+
+  return (
+    <Card className="w-full">
+      <CardContent className="p-6">
+        <h2 className="text-2xl font-bold mb-4">{city}</h2>
+        <div className="text-4xl font-bold mb-2">{time}</div>
+        <div className="text-gray-600 mb-4">{date}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {Object.entries(prayerTimes).map(([prayer, time]) => (
+            <Badge key={prayer} variant="outline" className="text-sm">
+              {prayerNameInArabic[prayer]}: {time}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
